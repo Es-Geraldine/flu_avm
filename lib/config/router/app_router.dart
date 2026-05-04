@@ -1,6 +1,5 @@
-import 'package:flu_avm/presentation/screens/domus/domus_screen.dart';
-import 'package:flu_avm/presentation/screens/numerator/numerator_screens.dart';
 import 'package:go_router/go_router.dart';
+import 'package:flu_avm/presentation/screens/screens.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
@@ -9,10 +8,15 @@ final appRouter = GoRouter(
       path: '/',
       builder: (context, state) => const DomusScreen(),
     ),
-  
-      GoRoute(
+
+    GoRoute(
       path: '/numerator-river',
       builder: (context, state) => const NumeratorScreens(),
-    )
-],
+    ),
+
+    GoRoute(
+      path: '/bands',
+      builder: (context, state) => const BandsScreen(),
+    ),
+  ],
 );
