@@ -11,93 +11,92 @@ class BandsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final bands = ref.watch(bandsProvider);
+    final bandsState = ref.watch(bandsProvider);
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('Bandas'),
+        title: const Text('Bandas'),
       ),
-  
       body: Column(
         children: [
-          _videreData(bands),
-          const SizedBox(height: 20,),
+          _videreData(bandsState.bands),
+          const SizedBox(height: 20),
           Expanded(
             child: ListView.builder(
-              itemCount: bands.length,
-              itemBuilder: (context, i) => _bandTile(context, ref, bands[i]),
+              itemCount: bandsState.bands.length,
+              itemBuilder: (context, i) =>
+                  _bandTile(context, ref, bandsState.bands[i]),
             ),
           ),
         ],
       ),
       floatingActionButton: Visibility(
-        visible: bands.length < 7 ? true : false,
+        visible: bandsState.bands.length < 7,
         child: FloatingActionButton(
           elevation: 1,
           onPressed: () => addereNovmBan(context, ref),
-          child: Icon(Icons.add),
+          child: const Icon(Icons.add),
         ),
       ),
     );
   }
 
-Widget _videreData( List<Band> bands ) {
+  Widget _videreData(List<Band> bands) {
+    final Map<String, double> dataMap = {
+      for (var band in bands) band.nomen: band.numerusVotum.toDouble(),
+    };
 
-    // ignore: prefer_collection_literals
-  Map<String, double> dataMap = Map(); 
+    final List<Color> colorList = [
+      Colors.pink.shade100,
+      Colors.pink.shade300,
+      Colors.blue.shade200,
+      Colors.blue.shade600,
+      Colors.lightGreen.shade200,
+      Colors.lightGreen.shade600,
+    ];
 
-  for (var band in bands) { 
-    dataMap.putIfAbsent(band.nomen, () => band.numerusVotum.toDouble() );
+    return dataMap.isNotEmpty
+        ? Container(
+            padding: const EdgeInsets.only(left: 5, top: 5),
+            width: double.infinity,
+            height: 200.0,
+            child: PieChart(
+              dataMap: dataMap,
+              animationDuration: const Duration(milliseconds: 800),
+              colorList: colorList,
+              chartType: ChartType.ring,
+              legendOptions: const LegendOptions(
+                showLegendsInRow: false,
+                legendPosition: LegendPosition.right,
+                showLegends: true,
+                legendTextStyle: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontFamily: "CupertinoSystemText",
+                  fontSize: 17,
+                ),
+              ),
+              chartValuesOptions: ChartValuesOptions(
+                showChartValues: dataMap.length <= 6,
+                showChartValueBackground: true,
+                showChartValuesInPercentage: false,
+                showChartValuesOutside: false,
+              ),
+            ),
+          )
+        : const LinearProgressIndicator();
   }
-
-  final List<Color> colorList = [
-    Colors.pink.shade100,
-    Colors.pink.shade300,
-    Colors.blue.shade200,
-    Colors.blue.shade600,
-    Colors.lightGreen.shade200,
-    Colors.lightGreen.shade600,
-  ];
-  
-  return dataMap.isNotEmpty ? Container(
-    padding: const EdgeInsets.only(left: 5, top: 5),
-    width: double.infinity,
-    height: 200.0,
-    child: PieChart(
-      dataMap: dataMap,
-      animationDuration: const Duration(milliseconds: 800),
-      colorList: colorList,
-      chartType: ChartType.ring,
-      legendOptions: const LegendOptions(
-        showLegendsInRow: false,
-        legendPosition: LegendPosition.right,
-        showLegends: true,
-        legendTextStyle: TextStyle(
-          fontWeight: FontWeight.bold,
-          fontFamily: "CupertinoSystemText", fontSize: 17,
-        ),
-      ),
-      chartValuesOptions: ChartValuesOptions(
-        showChartValues: dataMap.length <= 6, // con más de 6 no se ve el valor
-        showChartValueBackground: true,
-        showChartValuesInPercentage: false,
-        showChartValuesOutside: false,
-      ),
-    ),
-  ) : const LinearProgressIndicator();
-}
-
 
   Widget _bandTile(BuildContext context, WidgetRef ref, Band band) {
     return Dismissible(
       key: Key(band.id),
       direction: DismissDirection.startToEnd,
-      onDismissed: (direction) {
-        ref.read(bandsProvider.notifier).delereBand(band);
+      onDismissed: (_) {
+        ref.read(bandsProvider.notifier).delereBand(band.id);
       },
       background: Container(
-        padding: EdgeInsets.only(left: 8),
+        padding: const EdgeInsets.only(left: 8),
         color: Colors.red,
-        child: Align(
+        child: const Align(
           alignment: Alignment.centerLeft,
           child: Text('Delete band', style: TextStyle(color: Colors.white)),
         ),
@@ -107,16 +106,19 @@ Widget _videreData( List<Band> bands ) {
           child: Text(band.nomen.substring(0, 2).toUpperCase()),
         ),
         title: Text(band.nomen),
-        trailing: Text('${ band.numerusVotum }', style: TextStyle(fontSize: 20)),
+        trailing: Text(
+          '${band.numerusVotum}',
+          style: const TextStyle(fontSize: 20),
+        ),
         onTap: () {
-          ref.read(bandsProvider.notifier).addereVotum(band);
+          ref.read(bandsProvider.notifier).addereVotum(band.id);
         },
       ),
     );
   }
 }
 
-addereNovmBan(BuildContext context, WidgetRef ref) {
+void addereNovmBan(BuildContext context, WidgetRef ref) {
   final TextEditingController textumController = TextEditingController();
 
   showCupertinoDialog(
@@ -127,43 +129,27 @@ addereNovmBan(BuildContext context, WidgetRef ref) {
         controller: textumController,
         style: TextStyle(
           color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.white
-            : Colors.black
-        )
+              ? Colors.white
+              : Colors.black,
+        ),
       ),
       actions: [
         CupertinoDialogAction(
           isDefaultAction: true,
           child: const Text('Add'),
           onPressed: () {
-            ref.read(bandsProvider.notifier).addereBand(
-              Band(id: DateTime.now().toString(), nomen: textumController.text, numerusVotum: 0)
-            );
+            ref
+                .read(bandsProvider.notifier)
+                .addereBand(textumController.text.trim());
             context.pop();
-          }
+          },
         ),
         CupertinoDialogAction(
           isDestructiveAction: true,
           child: const Text('Close'),
-          onPressed: () => context.pop()
+          onPressed: () => context.pop(),
         ),
       ],
-    )
+    ),
   );
-
-}
-
-
-void addereBandCollectione(BuildContext context, WidgetRef ref, String nomen){
-
-  if(nomen.length > 1){
-    ref.read(bandsProvider.notifier).addereBand(Band(
-      id: DateTime.now().toString(), 
-      nomen: nomen, 
-      numerusVotum: 0
-      )
-    );
-  }
-
-  context.pop();
 }
