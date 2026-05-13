@@ -29,6 +29,12 @@ const appMenuItems = <MenuItem>[
     link: '/bands',
     icon: Icons.music_note_outlined,
   ), 
-
+  
+  MenuItem(
+    titulus: 'Mapas',
+    subtitulus: 'Localización de usuarios',
+    link: '/charta',
+    icon: Icons.map_outlined,
+  ),
 
 ];
